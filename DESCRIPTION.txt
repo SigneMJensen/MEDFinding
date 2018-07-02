@@ -1,0 +1,10 @@
+Package: MEDFinding
+Type: Package
+Title: Minimum effective dose finding
+Version: 0.1.0
+Author: Signe M.Jensen
+Maintainer: Signe M. Jensen <smj@plen.ku.dk>
+Description: Minimum effective dose finding based on parametric dose-response modelling controlling the overall family-wise error rate
+License: GPL
+Encoding: UTF-8
+LazyData: true
