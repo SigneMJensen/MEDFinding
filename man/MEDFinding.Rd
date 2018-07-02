@@ -28,7 +28,7 @@ MEDFinding(object, data, type="normal", useModels, delta,pocMethods,sMethod="AIC
 }
 
 \details{
-  }.
+ 
 }
 
 \value{

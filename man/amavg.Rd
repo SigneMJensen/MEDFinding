@@ -1,4 +1,4 @@
-\name{amavg
+\name{amavg}
 \alias{amavg}
 
 \title{
@@ -23,7 +23,7 @@ amavg(modelList, modelWeights, expressions, interval=c("Buckland", "Asymptotic")
   }
 
 \details{
-  }.
+  
 }
 
 \value{

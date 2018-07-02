@@ -21,7 +21,7 @@ POC(object, data, type = "normal", pocMethods=c("linear","Dunnett","DRModels","M
   }
 
 \details{
-  }.
+ 
 }
 
 \value{
