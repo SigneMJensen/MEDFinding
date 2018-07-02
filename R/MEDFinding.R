@@ -1,5 +1,5 @@
 MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sMethod="AIC", userD = NA, 
-                     margin=0.0001, userContr=NA, adjusted=TRUE, Quantile=FALSE){
+                     margin=0.0001, userContr=NA, Adjusted=TRUE, Quantile=FALSE){
   fList <- mtList()
   if(type=="binomial"){
     df <- data
@@ -68,14 +68,17 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
         
         beta <- m.dose.finding$coef[,"Estimate"]
         Sigma <- m.dose.finding$covar
-        sim.adj[[1]]<- suppressWarnings(summary(glht(model = parm(beta, Sigma),alternative="greater")))
+        ifelse(Adjusted==TRUE,
+               sim.adj[[1]]<- suppressWarnings(summary(glht(model = parm(beta, Sigma),alternative="greater"))),
+               sim.adj[[1]]<- suppressWarnings(summary(glht(model = parm(beta, Sigma),alternative="greater"),test=adjusted(type="none"))))
         if(tail(sim.adj[[1]]$test$pvalues,1) < 0.05){ 
           lower <- F.doses[[1]]
           upper <- F.doses[[1]]
         } else {
           lower <- F.doses[[1]]
+          upper <- Inf
         }
-        
+         if(upper-lower>margin){
         F.doses[[2]] <- max(df[["dose"]])
         dose.finding.models[[2]] <- modelList[[best.model]]
         dose.finding.tests[[2]] <- gsub("dose", paste(F.doses[[2]]) , paste(model.exp," - c",sep=""))
@@ -86,11 +89,14 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
         
         beta2 <- m.dose.finding2$coef[,"Estimate"]
         Sigma2 <- m.dose.finding2$covar
-        sim.adj[[2]]<- suppressWarnings(summary(glht(model = parm(beta2, Sigma2),alternative="greater")))
+        ifelse(Adjusted==TRUE,
+               sim.adj[[2]]<- suppressWarnings(summary(glht(model = parm(beta2, Sigma2),alternative="greater"))),
+               sim.adj[[2]]<- suppressWarnings(summary(glht(model = parm(beta2, Sigma2),alternative="greater"),test=adjusted(type="none"))))
         ifelse((tail(as.numeric(sim.adj[[2]]$test$coefficients),1)  >= delta) & 
                  (tail(sim.adj[[2]]$test$pvalues,1) < 0.05),  
                upper <- F.doses[[2]], upper <- 2)
-        
+         }
+        adj.quantile<-list()
         
         l<-3
         while((upper-lower) > margin){
@@ -103,9 +109,12 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
                                     seType = "mod")
           beta.a <- m.dose.finding.a$coef[,"Estimate"]
           Sigma.a <- m.dose.finding.a$covar
-          ifelse(adjusted,
+          ifelse(Adjusted==TRUE,
                  sim.adj[[l]]<- suppressWarnings(summary(glht(model = parm(beta.a, Sigma.a),alternative="greater"))),
                  sim.adj[[l]]<- suppressWarnings(summary(glht(model = parm(beta.a, Sigma.a),alternative="greater"),test=adjusted(type="none"))))
+          if(Quantile & Adjusted){
+            adj.quantile[[l]] <- suppressWarnings(attr(confint(glht(model = parm(beta.a, Sigma.a),alternative="greater"))$confint,"calpha"))
+          }
           if((tail(as.numeric(sim.adj[[l]]$test$coefficients),1)  >= delta) & (tail(sim.adj[[l]]$test$pvalues,1) < 0.05)){ 
             upper <- F.doses[[l]]
           } else {
@@ -166,7 +175,9 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
       }
       ma<- amavg(rep(maModelList,nrow(maTestMat)), weightMat,as.list(t(maTestMat)),interval="Asymptotic")
       
-      sim.ma.adj[[1]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater")))
+      ifelse(Adjusted,
+             sim.ma.adj[[1]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater"))),
+             sim.ma.adj[[1]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater"),test=adjusted(type="none"))))
       
       if((tail(as.numeric(sim.ma.adj[[1]]$test$coefficients),1)  >= delta) & (tail(sim.ma.adj[[1]]$test$pvalues,1) < 0.05)){ 
         stop("Minimum effective dose < 0.001")
@@ -185,7 +196,9 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
       }
       ma<- amavg(rep(maModelList,nrow(maTestMat)), weightMat,as.list(t(maTestMat)),interval="Asymptotic")
       
-      sim.ma.adj[[2]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater")))
+      ifelse(Adjusted,
+             sim.ma.adj[[2]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater"))),
+             sim.ma.adj[[2]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater"),test=adjusted(type="none"))))
       
       if((tail(as.numeric(sim.ma.adj[[2]]$test$coefficients),1)  >= delta) & (tail(sim.ma.adj[[2]]$test$pvalues,1) < 0.05)){ 
         upper <- F.doses[[2]]
@@ -193,9 +206,7 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
         stop("Minimum effective dose > largest dose")
       } 
       
-      if(Quantile==TRUE){
-        adj.quantile<-list()
-      }
+      adj.quantile<-list()
       
       l<-3
       while((upper-lower) > margin){
@@ -210,10 +221,10 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
         }
         ma<- amavg(rep(maModelList,nrow(maTestMat)), weightMat,as.list(t(maTestMat)),interval="Asymptotic")
         
-        ifelse(adjusted,
+        ifelse(Adjusted,
                sim.ma.adj[[l]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater"))),
                sim.ma.adj[[l]] <- suppressWarnings(summary(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater"),test=adjusted(type="none"))))
-        if(Quantile==TRUE){
+        if(Quantile & Adjusted){
           adj.quantile[[l]] <- suppressWarnings(attr(confint(glht(model = parm(ma$coef[,1], ma$covar),alternative="greater"))$confint,"calpha"))
         }
         if((tail(as.numeric(sim.ma.adj[[l]]$test$coefficients),1)  >= delta) & (tail(sim.ma.adj[[l]]$test$pvalues,1) < 0.05)){ 
@@ -225,8 +236,13 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
       }
     }
   }
+  
   MEDose<-list(MED = tail(F.doses,1),
-               size = length(F.doses) #,adj.quantile = tail(adj.quantile,1)$adj.quantile
-  )
+               AllDoses = F.doses,
+               size = length(F.doses), 
+               Quantile = tail(adj.quantile,1),
+               All.quantiles = adj.quantile,
+               SIM = sim.ma.adj)
+  class(MEDose) = "MEDFinding"
   MEDose
 }
