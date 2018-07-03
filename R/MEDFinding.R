@@ -241,8 +241,7 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
                AllDoses = F.doses,
                size = length(F.doses), 
                Quantile = tail(adj.quantile,1),
-               All.quantiles = adj.quantile,
-               SIM = sim.ma.adj)
+               All.quantiles = adj.quantile)
   class(MEDose) = "MEDFinding"
   MEDose
 }
