@@ -9,18 +9,35 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
     df[["total"]] <- df[[ strsplit(as.character(object[[2]]), "/")[[3]] ]] 
     tmp <- POC(object, data=data, type = "binomial", pocMethods=c(pocMethods,"DRModels"), useModels=useModels,
                userContr=userContr)
-    
+  }
+  if(type=="normal"){
+    df <- data
+    df[["dose"]] <- df[[ object[[3]] ]]
+    df[["doseF"]] <- as.factor(df[["dose"]])
+    df[["response"]] <- df[[ object[[2]] ]] 
+    tmp <- POC(object, data=data, type = "normal", pocMethods=c(pocMethods,"DRModels"), useModels=useModels,
+               userContr=userContr)
+  }
+   
     select.models <-tmp$Models
     select.tests <- tmp$Tests
     
     # Best model by AIC
     modelList<-list()
+    if(type=="binomial"){
     for(i in 1:length(useModels)){
       #options(show.error.messages = FALSE)
       modelList[[i]] <- try(drm(event/total ~ dose, data = df, type="binomial", weight=total, fct = useModels[[i]]),TRUE)
       names(modelList)[[i]] <- paste("model.",i,sep='')
     }
-    
+    }
+    if(type=="normal"){
+      for(i in 1:length(useModels)){
+        #options(show.error.messages = FALSE)
+        modelList[[i]] <- try(drm(response ~ dose, data = df, fct = useModels[[i]]),TRUE)
+        names(modelList)[[i]] <- paste("model.",i,sep='')
+      }
+    }
     m.conv <- as.numeric(which(unlist(lapply(modelList, function(x) !inherits(x, "try-error")))))
     
     
@@ -235,7 +252,7 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
         l <- l+1  
       }
     }
-  }
+  
   
   MEDose<-list(MED = tail(F.doses,1),
                AllDoses = F.doses,
