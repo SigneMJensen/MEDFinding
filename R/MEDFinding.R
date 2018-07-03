@@ -207,7 +207,7 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
       } 
       
       adj.quantile<-list()
-      
+
       l<-3
       while((upper-lower) > margin){
         F.doses[[l]] <- sum(c(lower,upper))/2
