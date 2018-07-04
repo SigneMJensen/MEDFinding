@@ -21,7 +21,7 @@ POC<-function(object, data, type = "normal", pocMethods=c("linear","Dunnett","DR
         options(show.error.messages = FALSE)
         POC.models[[k+j]] <- try(drm(response ~ dose, data = df1, fct = useModels[[i]]),TRUE)
         if(!inherits(POC.models[[k+i]], "try-error")){
-          POC.tests[[k+j]] <- "b"
+          POC.tests[[k+j]] <- fList[[useModels[[i]]$name]]$poc
           j <- j+1
         }
       }

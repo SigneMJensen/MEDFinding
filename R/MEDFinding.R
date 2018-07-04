@@ -40,7 +40,6 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
     }
     m.conv <- as.numeric(which(unlist(lapply(modelList, function(x) !inherits(x, "try-error")))))
     
-    
     best.model <- names(which(unlist(lapply(modelList[m.conv],function(x) try(AIC(x),TRUE))) == 
                                 min(unlist(lapply(modelList[m.conv],function(x) try(AIC(x),TRUE))))))
     
@@ -61,13 +60,11 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
     } 
     crit1 <- ifelse(identical(slope,"increasing" ),f0+delta,f0-delta)
     
-    # Test d-f0 = 0 for at tjekke om der i det hele taget findes in dosis der opfylder kravet
-    # Find dosis0 hvor f(dosis0) = crit1 og derefter confidence interval for f(dosis0)
     if(sMethod %in% c("AIC","user")){
       dose.finding.models <- list()
       dose.finding.tests <- list()
       sim.adj <- list()
-      model.exp <- fList[[modelList[[best.model]][["fct"]][["name"]]]]
+      model.exp <- fList[[modelList[[best.model]][["fct"]][["name"]]]]$fct
       
       F.doses <- list() 
       F.doses[[1]] <- ED(modelList[[best.model]], crit1, type = "absolute", display = FALSE)[1]  
@@ -86,8 +83,9 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
         beta <- m.dose.finding$coef[,"Estimate"]
         Sigma <- m.dose.finding$covar
         ifelse(Adjusted==TRUE,
-               sim.adj[[1]]<- suppressWarnings(summary(glht(model = parm(beta, Sigma),alternative="greater"))),
-               sim.adj[[1]]<- suppressWarnings(summary(glht(model = parm(beta, Sigma),alternative="greater"),test=adjusted(type="none"))))
+               sim.adj[[1]] <- suppressWarnings(summary(glht(model = parm(beta, Sigma),alternative="greater"))),
+               sim.adj[[1]] <- suppressWarnings(summary(glht(model = parm(beta, Sigma),alternative="greater"),test=adjusted(type="none"))))
+        
         if(tail(sim.adj[[1]]$test$pvalues,1) < 0.05){ 
           lower <- F.doses[[1]]
           upper <- F.doses[[1]]
