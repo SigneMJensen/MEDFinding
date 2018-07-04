@@ -1,5 +1,5 @@
 MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sMethod="AIC", userD = NA, 
-                     margin=0.0001, userContr=NA, Adjusted=TRUE, Quantile=FALSE){
+                     margin=0.0001, userContr=NA, Adjusted=TRUE, Quantile=FALSE,startDose=0.001){
   fList <- mtList()
   if(type=="binomial"){
     df <- data
@@ -60,13 +60,14 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
     } 
     crit1 <- ifelse(identical(slope,"increasing" ),f0+delta,f0-delta)
     
+    F.doses <- list() 
+    dose.finding.models <- list()
+    dose.finding.tests <- list()
+    sim.adj <- list()
+    
     if(sMethod %in% c("AIC","user")){
-      dose.finding.models <- list()
-      dose.finding.tests <- list()
-      sim.adj <- list()
       model.exp <- fList[[modelList[[best.model]][["fct"]][["name"]]]]$fct
       
-      F.doses <- list() 
       F.doses[[1]] <- ED(modelList[[best.model]], crit1, type = "absolute", display = FALSE)[1]  
       
       lower <- -Inf
@@ -141,7 +142,6 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
     }
     if(sMethod=="MA"){
       myMod<-which(sapply(select.models,function(x)inherits(x,"drc")))
-      as.numeric("linear" %in% pocMethods)
       maModelList <- list()
       maTestMat <- matrix(0,ncol = as.numeric("linear" %in% pocMethods) + 
                             length(useModels)+
@@ -173,10 +173,10 @@ MEDFinding<-function(object, data, useModels, delta, type="normal",pocMethods,sM
       w.AIC<-sapply(select.models[myMod],function(x){AIC(x)})
       sim.ma.adj<-list()
       
-      model.exp <- lapply(useModels,function(x){fList[[x$name]]})
+      model.exp <- lapply(useModels,function(x){fList[[x$name]]$fct})
       
       F.doses <- list()
-      F.doses[[1]]<-0.001
+      F.doses[[1]]<-startDose
       ma1<- maTestMat[1,]
       ma1[myMod] <- sapply(model.exp,function(x){gsub("dose", paste(F.doses[[1]]) , paste(x," - c",sep=""))})
       maTestMat<-rbind(maTestMat,ma1)

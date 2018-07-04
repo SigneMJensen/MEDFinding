@@ -52,8 +52,7 @@ amavg<-function (modelList, modelWeights, expressions, interval=c("Buckland", "A
   }
   iidList <- list()
   numModels <- length(modelList)
-  for(i in 1:numModels)
-  {
+  for(i in 1:numModels){
     iidList[[i]]<- makeIIDdecomp(modelList[[i]], expressions[[i]])
   }
   iidresp <- matrix(as.vector(unlist(lapply(iidList, function(listElt) {
@@ -64,8 +63,7 @@ amavg<-function (modelList, modelWeights, expressions, interval=c("Buckland", "A
     listElt[[4]]})))
   thetaEst <- rep(NA, numModels)
   thetaSe <- rep(NA, numModels)
-  for(i in 1:numModels)
-  {
+  for(i in 1:numModels){
     if (inherits(modelList[[i]], "drc")){
       coefVec <- coef(modelList[[i]])
       names(coefVec) <- sapply(strsplit(names(coefVec), ":"), "[[", 1)
